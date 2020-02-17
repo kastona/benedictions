@@ -3,32 +3,32 @@ const User = require('../models/user')
 
 const router = express.Router()
 
-router.get('/me', async (req, res) => {
-    const user = new User({
-        name: 'My Name',
-        email: 'stephenkastona@gmail.com',
-        password: 'siekkdkdiekdie',
-        locations: [
-            {
-                location: 'Abuja'
-            }
-        ],
-        genre: 'Gospel',
-        label: 'G-Club',
-        tokens: [
-            {
-             token: 'mytoken'
-            }
-        ],
-        usedSpace: 30
-    })
+router.post('/users', async (req, res) => {
+    const user = new User(req.body)
+
 
     try {
+        const token = await user.generateAuthToken()
         await user.save()
-        res.send(user)
+        res.send({user, token})
     }
     catch(error) {
         res.status(401).send(error)
+    }
+})
+
+router.post('/users/login', async (req, res) => {
+    try {
+        const user = await User.findByCredentials(req.body.email, req.body.password)
+        if(!user) {
+            throw new Error()
+        }
+
+        const token = user.generateAuthToken()
+        res.send({user, token})
+
+    }catch(error) {
+        res.status(500).send()
     }
 })
 

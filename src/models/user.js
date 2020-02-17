@@ -90,8 +90,17 @@ userSchema.statics.findByCredentials = async (email, password) => {
 userSchema.methods.generateAuthToken = async function() {
     const user = this
     const token = jwt.sign({_id: user._id}, 'myman')
-    user.tokens = user.tokens.concat(token)
+    user.tokens = user.tokens.concat({token})
     return token
+}
+
+userSchema.methods.toJSON = function() {
+    const user = this
+    const userObject = user.toObject()
+    delete userObject.tokens
+    delete userObject.password
+
+    return userObject
 }
 
 userSchema.pre('save', async function (next) {
