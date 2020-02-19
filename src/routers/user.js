@@ -1,5 +1,6 @@
 const express = require('express')
 const User = require('../models/user')
+const auth = require('../middleware/auth')
 
 const router = express.Router()
 
@@ -29,7 +30,13 @@ router.post('/users/login', async (req, res) => {
     }
 })
 
-router.get('/users', async (req,res) =>{
+router.post('/users/logout', auth, async (req, res) => {
+    req.user.tokens = []
+    await req.user.save()
+    res.send()
+})
+
+router.get('/users/me',auth, async (req,res) =>{
     try {
         const user = req.user
         res.send(user)
@@ -38,5 +45,38 @@ router.get('/users', async (req,res) =>{
     }
 })
 
+router.patch('/users/me', auth, async (req, res) => {
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['name', 'email', 'password', 'location', 'genre', 'label', 'accountType']
+
+    const isValidOperation = updates.every(update => {
+        return allowedUpdates.includes(update)
+    })
+
+    if(!isValidOperation) {
+        res.status(400).send({error: 'Invalid update'})
+    }
+
+    try {
+        updates.forEach(update => {
+            req.user[update] = req.body[update]
+        })
+
+        await req.user.save()
+        res.send(req.user)
+    }catch(error) {
+        res.status(500).send()
+    }
+
+})
+
+router.delete('/user/me', auth, async (req, res) => {
+    try {
+        await req.user.delete()
+        res.send()
+    }catch(error) {
+        res.status(500).send()
+    }
+})
 
 module.exports = router
