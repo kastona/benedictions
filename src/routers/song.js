@@ -31,6 +31,22 @@ router.get('/songs/:id', auth, async (req, res) => {
     }
 })
 
+/*
+ /songs?artistid=someid&genre=somegenre&rating=somerating&location=somelocation
+ */
+router.get('/songs', async (req, res) => {
+    try {
+        const songs = await Song.find({})
+        if(!songs) {
+            return res.status(401).send()
+        }
+
+        res.send(songs)
+    }catch(error) {
+        res.status(500).send()
+    }
+})
+
 router.patch('/songs/:id', auth, async (req, res) => {
     const songId = req.params.id
     try{
