@@ -1,4 +1,4 @@
-const mongoose = require('../db/mongoose')
+const mongoose = require('mongoose')
 
 const songSchema = new mongoose.Schema({
     title: {
@@ -33,7 +33,6 @@ const songSchema = new mongoose.Schema({
         ref: 'User'
     }
 },{timestamps: true})
-
 
 const Song = mongoose.model('Song', songSchema)
 
