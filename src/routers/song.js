@@ -31,12 +31,34 @@ router.get('/songs/:id', auth, async (req, res) => {
     }
 })
 
-/*
- /songs?artistid=someid&genre=somegenre&rating=somerating&location=somelocation
- */
+
 router.get('/songs', async (req, res) => {
+
+    const searchCriteria = {}
+    const sort= {}
+
+    const queryOptions = ['artist', 'genre', 'rating']
+
+
+    if(req.query.sortBy) {
+        const sortingQuery = req.query.sortBy.split(':')
+        sort[sortingQuery[0]] = sortingQuery[1] === 'desc'? -1: 1
+    }
+
+
+
+    queryOptions.forEach(query => {
+        if(req.query[query])
+            searchCriteria[query] = req.query[query]
+    })
+
+
     try {
-        const songs = await Song.find({})
+        const songs = await Song.find(searchCriteria).setOptions({
+            limit: parseInt(req.query.limit),
+            skip: parseInt(req.query.skip),
+            sort
+        })
         if(!songs) {
             return res.status(401).send()
         }
