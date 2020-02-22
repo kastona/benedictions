@@ -69,6 +69,45 @@ router.get('/songs', async (req, res) => {
     }
 })
 
+router.get('/users/me', auth, async (req,res) => {
+    const match= {}
+    const sort = {}
+    const queryOptions = ['rating', 'genre']
+
+    if(req.query.sortBy) {
+        const sortParams = req.query.sortBy.split(':')
+
+        sort[sortParams[0]] = sortParams[1]
+    }
+
+    queryOptions.forEach(query => {
+        if(req.query[query])
+            match[query] = req.query[query]
+    })
+
+    try {
+        await req.user.populate({
+            path: 'songs',
+            match,
+            options: {
+                limit: parseInt(req.query.limit),
+                skip: parseInt(req.query.skip),
+                sort
+            }
+        }).execPopulate()
+
+        if(!req.user.songs) {
+            return res.status(404).send()
+        }
+
+        res.send(req.user.songs)
+
+
+    }catch(error) {
+        res.status(500).send()
+    }
+})
+
 router.patch('/songs/:id', auth, async (req, res) => {
     const songId = req.params.id
     try{
