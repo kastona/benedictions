@@ -68,8 +68,10 @@ router.get('/songs', async (req, res) => {
         res.status(500).send()
     }
 })
+//for some reason /songs/* doesn't work
+router.get('/mysongs',auth, async (req, res) => {
 
-router.get('/users/me', auth, async (req,res) => {
+
     const match= {}
     const sort = {}
     const queryOptions = ['rating', 'genre']
@@ -77,7 +79,7 @@ router.get('/users/me', auth, async (req,res) => {
     if(req.query.sortBy) {
         const sortParams = req.query.sortBy.split(':')
 
-        sort[sortParams[0]] = sortParams[1]
+        sort[sortParams[0]] = sortParams[1] === 'desc'? -1:1
     }
 
     queryOptions.forEach(query => {
@@ -86,6 +88,7 @@ router.get('/users/me', auth, async (req,res) => {
     })
 
     try {
+
         await req.user.populate({
             path: 'songs',
             match,
@@ -99,12 +102,11 @@ router.get('/users/me', auth, async (req,res) => {
         if(!req.user.songs) {
             return res.status(404).send()
         }
-
         res.send(req.user.songs)
 
 
     }catch(error) {
-        res.status(500).send()
+        res.status(500).send({error: error.message})
     }
 })
 

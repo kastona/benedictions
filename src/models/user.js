@@ -2,6 +2,7 @@ const validator = require('validator')
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Song = require('./song')
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -94,11 +95,18 @@ userSchema.methods.generateAuthToken = async function() {
     return token
 }
 
+userSchema.virtual('songs', {
+    ref: 'Song',
+    localField: '_id',
+    foreignField: 'artist'
+})
+
 userSchema.methods.toJSON = function() {
     const user = this
     const userObject = user.toObject()
     delete userObject.tokens
     delete userObject.password
+    delete userObject.avatar
 
     return userObject
 }
@@ -112,6 +120,20 @@ userSchema.pre('save', async function (next) {
 
     next()
 })
+
+userSchema.pre('remove', async function (next) {
+    const user = this
+    try {
+        await Song.deleteMany({'artist': user._id})
+    }catch(error) {
+
+        throw new Error()
+    }
+
+    next()
+})
+
+
 
 const User = mongoose.model('User', userSchema)
 module.exports = User
