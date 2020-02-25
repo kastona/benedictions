@@ -1,14 +1,31 @@
 const express = require('express')
+const multer = require('multer')
 const auth = require('../middleware/auth')
+const Song = require('../models/song')
+const User = require('../models/user')
+
 
 const router = express.Router()
 
-const Song = require('../models/song')
 
 
-router.post('/songs', auth, async (req, res) => {
-    const song = new Song(req.body)
-    song.artist = req.user._id
+
+const upload = multer({
+    limits: {
+        fileSize: 7000000
+    },
+    fileFilter(req, file, cb) {
+        if(!file.originalname.match(/\.(mp3|mp4)/)) {
+            cb(new Error('Please Upload a song'))
+        }
+
+        cb(undefined, true)
+    }
+})
+
+router.post('/songs', auth,upload.single('song'), async (req, res) => {
+    const song = new Song({...req.body, songBuffer: req.file.buffer, artist: req.user._id})
+
     try {
         await song.save()
         res.status(201).send(song)
@@ -26,6 +43,22 @@ router.get('/songs/:id', auth, async (req, res) => {
             return res.status(401).send()
         }
         res.send(song)
+    }catch(error) {
+        res.status(500).send()
+    }
+})
+
+router.get('/songs/:id/song', async (req, res) => {
+    try {
+        const song = await Song.findById(req.params.id)
+        if(!song) {
+            return res.status(404).send()
+        }
+        const artist = await User.findById(song.artist)
+
+        res.set('Content-Type', 'Content-Type: audio/mpeg')
+        res.set('Content-Disposition', `filename=${artist.name} - ${song.title}.mp3`)
+        res.send(song.songBuffer)
     }catch(error) {
         res.status(500).send()
     }

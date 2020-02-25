@@ -34,6 +34,14 @@ const songSchema = new mongoose.Schema({
     }
 },{timestamps: true})
 
+songSchema.methods.toJSON = function () {
+    const song = this
+    const songObject = song.toObject()
+    delete songObject.songBuffer
+
+    return songObject
+}
+
 const Song = mongoose.model('Song', songSchema)
 
 module.exports = Song
