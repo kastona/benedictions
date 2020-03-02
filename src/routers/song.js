@@ -5,6 +5,7 @@ const Song = require('../models/song')
 const User = require('../models/user')
 
 
+
 const router = express.Router()
 
 
@@ -12,30 +13,38 @@ const router = express.Router()
 
 const upload = multer({
     limits: {
-        fileSize: 7000000
+        fileSize: 15428000
     },
     fileFilter(req, file, cb) {
         if(!file.originalname.match(/\.(mp3|mp4)/)) {
-            cb(new Error('Please Upload a song'))
+            cb(new Error('Please Upload a valid file'))
         }
 
         cb(undefined, true)
     }
 })
 
+
+
 router.post('/songs', auth,upload.single('song'), async (req, res) => {
+
+
     const song = new Song({...req.body, songBuffer: req.file.buffer, artist: req.user._id})
+
+
 
     try {
         await song.save()
         res.status(201).send(song)
     }catch(error) {
-        res.status(500).send()
+        res.status(500).send(error.message)
     }
 
 })
 
-router.get('/songs/:id', auth, async (req, res) => {
+
+
+router.get('/songs/:id', async (req, res) => {
     const songId = req.params.id
     try {
         const song = await Song.findById(songId)
@@ -48,19 +57,32 @@ router.get('/songs/:id', auth, async (req, res) => {
     }
 })
 
-router.get('/songs/:id/song', async (req, res) => {
+
+
+router.get('/songs/:id/:download', async (req, res) => {
     try {
         const song = await Song.findById(req.params.id)
         if(!song) {
             return res.status(404).send()
         }
+
+
         const artist = await User.findById(song.artist)
 
-        res.set('Content-Type', 'Content-Type: audio/mpeg')
-        res.set('Content-Disposition', `filename=${artist.name} - ${song.title}.mp3`)
+        let attachment = 'attachment;'
+        if(req.params.download === 'song') {
+            attachment = ''
+        }
+
+
+        const filename = `${artist.name}-ft-${song.featured}--${song.title}| Benedictions ${song.audio? '.mp3': '.mp4'}`
+
+
+        song.audio? res.set('Content-Type', 'audio/mpeg'): res.set('Content-Type', 'video/mp4')
+        res.set('Content-Disposition', `${attachment} filename=${filename}`)
         res.send(song.songBuffer)
     }catch(error) {
-        res.status(500).send()
+        res.status(500).send(error.message)
     }
 })
 

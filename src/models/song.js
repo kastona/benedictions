@@ -31,6 +31,22 @@ const songSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'User'
+    },
+    featured: {
+        type: String,
+        trim: true
+    },
+    album: {
+        type: String,
+        trim: true
+    },
+    track: {
+        type: Number
+    },
+    audio: {
+        type: Boolean,
+        required: true,
+        default: true
     }
 },{timestamps: true})
 
@@ -41,6 +57,8 @@ songSchema.methods.toJSON = function () {
 
     return songObject
 }
+
+
 
 const Song = mongoose.model('Song', songSchema)
 
