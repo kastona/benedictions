@@ -101,6 +101,12 @@ userSchema.virtual('songs', {
     foreignField: 'artist'
 })
 
+userSchema.virtual('events', {
+    ref: 'Event',
+    localField: '_id',
+    foreignField: 'artist'
+})
+
 userSchema.methods.toJSON = function() {
     const user = this
     const userObject = user.toObject()

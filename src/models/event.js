@@ -17,6 +17,11 @@ const eventSchema = new mongoose.Schema({
     when: {
         type: Date,
         required: true
+    },
+    artist: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
     }
 }, {
     timestamps: true
