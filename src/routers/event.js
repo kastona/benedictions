@@ -61,15 +61,35 @@ router.get('/events', async (req, res) => {
 })
 
 router.patch('/events/:id', auth, async (req, res) => {
+
     try {
-        const event = Event.findById(req.params.id)
-        if(!event) {
+        const event = await Event.findOne({_id: req.params.id, artist: req.user._id})
+        if (!event) {
             return res.status(401).send()
         }
 
+
+        const allowedUpdates = ['title', 'content', 'venue', 'when']
+
+        const updates = Object.keys(req.body)
+
+        const isValidUpdate = updates.every(update => {
+            return allowedUpdates.includes(update)
+        })
+
+        if (!isValidUpdate) {
+            return res.status(400).send({error: 'invalid updates'})
+        }
+
+        updates.forEach(update => {
+            event[update] = req.body[update]
+        })
+
+
+        await event.save()
         res.send(event)
 
-    }catch(error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 })

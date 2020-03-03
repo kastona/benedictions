@@ -201,7 +201,7 @@ router.patch('/songs/:id', auth, async (req, res) => {
 router.delete('/songs/:id', auth, async (req, res) => {
     const songId = req.params.id
     try {
-        const song = Song.findOne({_id: songId, artist: req.user._id})
+        const song = await Song.findOne({_id: songId, artist: req.user._id})
 
 
         if(!song) {
@@ -211,7 +211,7 @@ router.delete('/songs/:id', auth, async (req, res) => {
 
         res.send()
     }catch(error) {
-        res.status(500).send()
+        res.status(500).send(error.message)
     }
 })
 
