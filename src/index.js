@@ -10,7 +10,7 @@ app.use(userRouter)
 app.use(songRouter)
 app.use(eventRouter)
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 4000
 
 
 

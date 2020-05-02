@@ -1,4 +1,6 @@
 const express = require('express')
+const sharp = require('sharp')
+const NodeID3 = require('node-id3')
 const multer = require('multer')
 const auth = require('../middleware/auth')
 const Song = require('../models/song')
@@ -29,7 +31,14 @@ const upload = multer({
 router.post('/songs', auth,upload.single('song'), async (req, res) => {
 
 
-    const song = new Song({...req.body, songBuffer: req.file.buffer, artist: req.user._id})
+    let tags = NodeID3.read(req.file.buffer)
+    const imageBuffer = tags.image.imageBuffer? await sharp(tags.image.imageBuffer).png().toBuffer() : ''
+
+
+
+
+    const song = new Song({...req.body, songBuffer:  req.file.buffer, imageBuffer, artist: req.user._id})
+
 
 
 
@@ -86,6 +95,17 @@ router.get('/songs/:id/:download', async (req, res) => {
     }
 })
 
+router.get('/images/:id', async (req, res) => {
+    const song = await Song.findById(req.params.id)
+    if(!song) {
+
+        return res.status(404).send()
+    }
+
+
+    res.set('Content-Type', 'image/png')
+    res.status(200).send(song.imageBuffer)
+})
 
 router.get('/songs', async (req, res) => {
 

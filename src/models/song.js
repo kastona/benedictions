@@ -18,7 +18,8 @@ const songSchema = new mongoose.Schema({
         }
     },
     hits: {
-        type: Number
+        type: Number,
+        default:0
     },
     genre: {
         type: String,
@@ -27,14 +28,31 @@ const songSchema = new mongoose.Schema({
     songBuffer: {
         type: Buffer
     },
+    imageBuffer: {
+        type: Buffer
+    },
     artist: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'User'
     },
+    artistName: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+    },
+    lyrics: {
+        type: String
+    },
     featured: {
         type: String,
         trim: true
+    },
+    seoTitle: {
+        type: String,
+        required: true
     },
     album: {
         type: String,
@@ -54,6 +72,7 @@ songSchema.methods.toJSON = function () {
     const song = this
     const songObject = song.toObject()
     delete songObject.songBuffer
+    delete songObject.imageBuffer
 
     return songObject
 }
