@@ -66,14 +66,15 @@ router.get('/users/me',auth, async (req,res) =>{
 
 router.patch('/users/me', auth, async (req, res) => {
     const updates = Object.keys(req.body)
-    const allowedUpdates = ['name', 'email', 'password', 'location', 'genre', 'label', 'accountType']
+
+    const allowedUpdates = ['name', 'email', 'stageName', 'password', 'location', 'bio','genre', 'label']
 
     const isValidOperation = updates.every(update => {
         return allowedUpdates.includes(update)
     })
 
     if(!isValidOperation) {
-        res.status(400).send({error: 'Invalid update'})
+        return res.status(400).send({error: 'Invalid update'})
     }
 
     try {
@@ -84,7 +85,9 @@ router.patch('/users/me', auth, async (req, res) => {
         await req.user.save()
         res.send(req.user)
     }catch(error) {
+        console.log(error.message)
         res.status(500).send()
+
     }
 
 })
