@@ -31,6 +31,7 @@ router.post('/users', async (req, res) => {
         res.status(201).send({user, token})
     }
     catch(error) {
+        console.log(error.message)
         res.status(401).send(error)
     }
 })
@@ -40,9 +41,10 @@ router.post('/users/login', async (req, res) => {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         const token = await user.generateAuthToken()
         await user.save()
-        res.send({user, token})
+        res.send({token})
 
     }catch(error) {
+        console.log(error.message)
         res.status(400).send(error)
     }
 })
@@ -56,7 +58,7 @@ router.post('/users/logout', auth, async (req, res) => {
 router.get('/users/me',auth, async (req,res) =>{
     try {
         const user = req.user
-        res.send(user)
+        res.send({user})
     }catch(err) {
         res.status(400).send()
     }

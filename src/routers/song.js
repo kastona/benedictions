@@ -26,6 +26,17 @@ const upload = multer({
     }
 })
 
+router.post('/upload', upload.single('file'), async (req, res) => {
+
+    try{
+        console.log(req.file.buffer)
+        res.send('something')
+    }catch(e) {
+        console.log(e.message)
+        res.send('error')
+    }
+})
+
 
 
 router.post('/songs', auth,upload.single('song'), async (req, res) => {

@@ -23,6 +23,17 @@ const userSchema = new mongoose.Schema({
         }
 
     },
+
+    stageName: {
+        type: String,
+        trim: true,
+        unique: true
+    },
+
+    bio: {
+        type: String,
+        trim: true
+    },
     password: {
         type: String,
         required: true,
@@ -76,15 +87,14 @@ const userSchema = new mongoose.Schema({
 userSchema.statics.findByCredentials = async (email, password) => {
     const user = await User.findOne({email})
     if(!user) {
+
         throw new Error('Unable to login')
     }
-
     const passwordCorrect = await bcrypt.compare(password, user.password)
 
     if(!passwordCorrect) {
         throw new Error('Unable to login')
     }
-
     return user;
 }
 
