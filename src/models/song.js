@@ -52,7 +52,6 @@ const songSchema = new mongoose.Schema({
     },
     seoTitle: {
         type: String,
-        required: true
     },
     album: {
         type: String,

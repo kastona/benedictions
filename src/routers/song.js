@@ -26,16 +26,6 @@ const upload = multer({
     }
 })
 
-router.post('/upload', upload.single('file'), async (req, res) => {
-
-    try{
-        console.log(req.file.buffer)
-        res.send('something')
-    }catch(e) {
-        console.log(e.message)
-        res.send('error')
-    }
-})
 
 
 
@@ -47,16 +37,21 @@ router.post('/songs', auth,upload.single('song'), async (req, res) => {
 
 
 
-
     const song = new Song({...req.body, songBuffer:  req.file.buffer, imageBuffer, artist: req.user._id})
+
 
 
 
 
     try {
         await song.save()
+        const seoTitle = `${(song.title + ' by ' + song.artistName).replace(/ /g, '-')}`
+
+        song.seoTitle = seoTitle
+        await song.save()
         res.status(201).send(song)
     }catch(error) {
+        console.log(error.message)
         res.status(500).send(error.message)
     }
 
@@ -160,7 +155,7 @@ router.get('/mysongs',auth, async (req, res) => {
 
     const match= {}
     const sort = {}
-    const queryOptions = ['rating', 'genre']
+    const queryOptions = ['rating', 'genre', 'audio']
 
     if(req.query.sortBy) {
         const sortParams = req.query.sortBy.split(':')
@@ -192,6 +187,7 @@ router.get('/mysongs',auth, async (req, res) => {
 
 
     }catch(error) {
+        console.log(error.message)
         res.status(500).send({error: error.message})
     }
 })

@@ -8,7 +8,7 @@ const router = express.Router()
 
 const upload = multer({
     limits: {
-        fileSize: 1000000
+        fileSize: 3000000
     },
     fileFilter(req, file, cb) {
         if(!file.originalname.match(/\.(jpeg|jpg|png|gif)/)) {
@@ -64,10 +64,22 @@ router.get('/users/me',auth, async (req,res) =>{
     }
 })
 
+router.patch('/users/me/password', auth, async (req, res) => {
+    try {
+        await req.user.changePassword(req.body.password, req.body.newPassword)
+
+        req.user.save()
+
+        res.send(req.user)
+    }catch(error) {
+        res.status(400).send(error)
+    }
+})
+
 router.patch('/users/me', auth, async (req, res) => {
     const updates = Object.keys(req.body)
 
-    const allowedUpdates = ['name', 'email', 'stageName', 'password', 'location', 'bio','genre', 'label']
+    const allowedUpdates = ['name', 'email', 'stageName', 'location', 'bio','genre', 'label']
 
     const isValidOperation = updates.every(update => {
         return allowedUpdates.includes(update)
@@ -100,15 +112,16 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
     res.send()
 })
 
-router.get('/users/:id/avatar', auth, async (req, res) => {
+router.get('/users/:id/avatar', async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
         if(!user) {
             return res.status(404).send()
         }
         res.set('Content-Type', 'image/png')
-        res.send(req.user.avatar)
+        res.send(user.avatar)
     }catch(error) {
+        console.log(error.message)
         res.status(500).send()
     }
 })

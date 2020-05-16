@@ -105,6 +105,17 @@ userSchema.methods.generateAuthToken = async function() {
     return token
 }
 
+
+userSchema.methods.changePassword = async  function(oldPassword, newPassword) {
+    const user = this
+    const passwordCorrect = await bcrypt.compare(oldPassword, user.password)
+
+    if(!passwordCorrect) {
+        throw new Error('Wrong Password')
+    }
+
+    user.password = newPassword
+}
 userSchema.virtual('songs', {
     ref: 'Song',
     localField: '_id',
