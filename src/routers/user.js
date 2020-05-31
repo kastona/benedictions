@@ -2,6 +2,7 @@ const express = require('express')
 const multer = require('multer')
 const sharp = require('sharp')
 const User = require('../models/user')
+const Song = require('../models/song')
 const auth = require('../middleware/auth')
 
 const router = express.Router()
@@ -44,7 +45,6 @@ router.post('/users/login', async (req, res) => {
         res.send({token})
 
     }catch(error) {
-        console.log(error.message)
         res.status(400).send(error)
     }
 })
@@ -105,11 +105,17 @@ router.patch('/users/me', auth, async (req, res) => {
 })
 
 router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
-    const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
-    req.user.avatar = buffer
-    await req.user.save()
+    try {
+        const buffer = await sharp(req.file.buffer).resize({width: 250, height: 250}).png().toBuffer()
+        req.user.avatar = buffer
+        await req.user.save()
+        res.send()
+    }catch (error) {
+        res.status(500).send()
+    }
 
-    res.send()
+
+
 })
 
 router.get('/users/:id/avatar', async (req, res) => {
@@ -124,6 +130,40 @@ router.get('/users/:id/avatar', async (req, res) => {
         console.log(error.message)
         res.status(500).send()
     }
+})
+
+router.get('/users/me/can-upload', auth, async (req, res) => {
+    try {
+        const song = await Song.findOne({artist: req.user._id, approved: false})
+        if(song) {
+            console.log(song)
+            return res.send(false)
+        }
+
+        res.send(true)
+    }catch(error) {
+        console.log(error.message)
+        res.status(500).send()
+    }
+})
+
+router.get('/users/me/can-rate/:id', auth, async (req, res) => {
+    try {
+        let canRate;// = await req.user.canRate(req.params.id)
+        const user = await User.findOne({_id: req.user._id, 'ratedSongs.ratedSong': req.params.id})
+
+        if(user) {
+            canRate = false
+        }else {
+            canRate = true
+        }
+
+        res.send(canRate)
+    }catch(error) {
+        console.log(error.message)
+        res.status(401).send()
+    }
+
 })
 
 router.delete('/users/me', auth, async (req, res) => {

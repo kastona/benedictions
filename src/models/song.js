@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const mongooseFuzzySearching = require('mongoose-fuzzy-searching')
 
 const songSchema = new mongoose.Schema({
     title: {
@@ -16,6 +17,10 @@ const songSchema = new mongoose.Schema({
                 throw new Error('Invalid rating')
             }
         }
+    },
+    rateCount: {
+      type: Number ,
+      default: 0
     },
     hits: {
         type: Number,
@@ -36,6 +41,17 @@ const songSchema = new mongoose.Schema({
         required: true,
         ref: 'User'
     },
+
+    raters: [
+        {
+            rater: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+                unique: true
+            }
+
+        }
+    ],
     artistName: {
         type: String,
         required: true
@@ -64,6 +80,15 @@ const songSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: true
+    },
+    approved: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    promoted: {
+        type: Boolean,
+        default: false
     }
 },{timestamps: true})
 
@@ -75,6 +100,8 @@ songSchema.methods.toJSON = function () {
 
     return songObject
 }
+
+songSchema.plugin(mongooseFuzzySearching, { fields: ['title','genre', 'artistName', 'featured', 'lyrics'] })
 
 
 

@@ -4,6 +4,7 @@ require('./db/mongoose')
 const userRouter = require('./routers/user')
 const songRouter = require('./routers/song')
 const eventRouter = require('./routers/event')
+const imageRouter = require('./routers/image')
 
 const app = express()
 
@@ -12,6 +13,7 @@ app.use(cors())
 app.use(userRouter)
 app.use(songRouter)
 app.use(eventRouter)
+app.use(imageRouter)
 
 const PORT = process.env.PORT || 4000
 

@@ -105,6 +105,12 @@ userSchema.methods.generateAuthToken = async function() {
     return token
 }
 
+userSchema.methods.canRate = async function(ratedSong) {
+    const user = this
+
+    const canRate = !user.ratedSongs.includes({ratedSong})
+    return canRate
+}
 
 userSchema.methods.changePassword = async  function(oldPassword, newPassword) {
     const user = this
