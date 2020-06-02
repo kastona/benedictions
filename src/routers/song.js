@@ -262,6 +262,27 @@ router.get('/mysongs', auth, async (req, res) => {
     }
 })
 
+router.patch('/songs/:id/upgrade', auth, async (req, res) => {
+    try {
+        const song = await Song.findById(req.params.id)
+        if(!song) {
+            return res.status(404).send()
+        }
+        Object.keys(req.body).forEach(e => {
+                song[e] = req.body[e]
+        })
+
+        await song.save()
+
+
+        res.send(song)
+    }catch(error) {
+        res.status(500).send()
+    }
+})
+
+
+
 router.patch('/songs/:id', auth, async (req, res) => {
     const songId = req.params.id
     try {
@@ -295,11 +316,16 @@ router.patch('/songs/:id', auth, async (req, res) => {
     }
 })
 
+
 router.delete('/songs/:id', auth, async (req, res) => {
     const songId = req.params.id
     try {
-        const song = await Song.findOne({_id: songId, artist: req.user._id})
-
+        let song;
+        if(req.user.admin) {
+            song = await Song.findOne({_id: songId})
+        }else {
+          song = await Song.findOne({_id: songId, artist: req.user._id})
+        }
 
         if (!song) {
             return res.status(401).send()

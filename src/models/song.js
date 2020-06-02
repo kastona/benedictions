@@ -46,8 +46,7 @@ const songSchema = new mongoose.Schema({
         {
             rater: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'User',
-                unique: true
+                ref: 'User'
             }
 
         }
