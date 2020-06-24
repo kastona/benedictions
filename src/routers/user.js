@@ -154,7 +154,7 @@ router.get('/users/:id/avatar', async (req, res) => {
         res.set('Content-Type', 'image/png')
         if(!user.avatar) {
             const image = await Image.findOne({dummy: true})
-            res.send(image.buffer)
+            return res.send(image.buffer)
         }
         res.send(user.avatar)
     } catch (error) {
