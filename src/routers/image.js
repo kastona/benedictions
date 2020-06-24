@@ -30,13 +30,13 @@ router.post('/images', auth, upload.single('avatar'), async (req,res) => {
             return res.status(401).send()
         }
 
-        /*let imageBuffer = await Image.findOne()
+        let imageBuffer = await Image.findOne({dummy: false})
         if(!imageBuffer) {
 
             imageBuffer = new Image()
-        }*/
+        }
 
-        let imageBuffer = new Image()
+
 
 
         const buffer = await sharp(req.file.buffer).png().toBuffer()
@@ -52,7 +52,7 @@ router.post('/images', auth, upload.single('avatar'), async (req,res) => {
 router.get('/cover', async (req, res) => {
 
     try {
-        const imageBuffer = await Image.findOne()
+        const imageBuffer = await Image.findOne({dummy: false})
         if(!imageBuffer) {
 
             return res.status(404).send()

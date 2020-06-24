@@ -3,6 +3,7 @@ const multer = require('multer')
 const sharp = require('sharp')
 const User = require('../models/user')
 const Song = require('../models/song')
+const Image = require('../models/image')
 const auth = require('../middleware/auth')
 
 const router = express.Router()
@@ -152,7 +153,7 @@ router.get('/users/:id/avatar', async (req, res) => {
 
         res.set('Content-Type', 'image/png')
         if(!user.avatar) {
-
+            Image.findOne({dummy: true})
         }
         res.send(user.avatar)
     } catch (error) {

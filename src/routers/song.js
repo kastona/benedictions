@@ -49,7 +49,7 @@ router.post('/songs', auth, upload.single('song'), async (req, res) => {
     try {
         let imageBuffer;
         if(req.file.mimetype === 'audio/mp3') {
-            const temp = await Image.findOne({})
+            const temp = await Image.findOne({dummy: false})
             let tags = await NodeID3.read(req.file.path)
             imageBuffer = tags.image ? await sharp(tags.image.imageBuffer).png().toBuffer() : temp.buffer
             tags = {
