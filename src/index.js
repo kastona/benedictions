@@ -1,12 +1,15 @@
 const express = require('express')
 const cors = require('cors')
+require('dotenv').config()
 require('./db/mongoose')
 const userRouter = require('./routers/user')
 const songRouter = require('./routers/song')
 const eventRouter = require('./routers/event')
 const imageRouter = require('./routers/image')
-
 const app = express()
+
+
+
 
 app.use(express.json())
 app.use(cors())
@@ -15,7 +18,7 @@ app.use(songRouter)
 app.use(eventRouter)
 app.use(imageRouter)
 
-const PORT = process.env.PORT || 4000
+const PORT = process.env.PORT
 
 
 

@@ -72,6 +72,19 @@ const userSchema = new mongoose.Schema({
         required: true,
         default: 'Free'
     },
+    promoted: {
+        type: Boolean,
+        required: true
+    },
+    songsCount: {
+      type: Number,
+      default: 0
+    },
+    admin: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
     usedSpace: {
         type: Number,
         validate(space) {
@@ -100,7 +113,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 
 userSchema.methods.generateAuthToken = async function() {
     const user = this
-    const token = jwt.sign({_id: user._id}, 'myman')
+    const token = jwt.sign({_id: user._id}, process.env.JSON_WEB_TOKEN_SECRET)
     user.tokens = user.tokens.concat({token})
     return token
 }
@@ -154,7 +167,7 @@ userSchema.pre('save', async function (next) {
     next()
 })
 
-userSchema.pre('remove', async function (next) {
+userSchema.pre('deleteOne', async function (next) {
     const user = this
     try {
         await Song.deleteMany({'artist': user._id})

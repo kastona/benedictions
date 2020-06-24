@@ -2,6 +2,10 @@ const express = require('express')
 const sharp = require('sharp')
 const NodeID3 = require('node-id3')
 const multer = require('multer')
+const cloudinary = require('cloudinary').v2
+const fs = require('fs')
+const { promisify } = require('util')
+const unlinkAsync = promisify(fs.unlink)
 const ID3Writer = require('browser-id3-writer');
 const auth = require('../middleware/auth')
 const Song = require('../models/song')
@@ -12,60 +16,72 @@ const Image = require('../models/image')
 const router = express.Router()
 
 
+
+cloudinary.config({
+    cloud_name: process.env.cloud_name,
+    api_key: process.env.api_key,
+    api_secret: process.env.api_secret
+});
+
+
 const upload = multer({
     limits: {
-        fileSize: 15428000
+        fileSize: 15428000000
     },
     fileFilter(req, file, cb) {
-        if (!file.originalname.match(/\.(mp3|mp4)/)) {
+        if (!file.originalname.match(/\.(mp3|mp4|jpg|jpeg)/)) {
             cb(new Error('Please Upload a valid file'))
         }
 
         cb(undefined, true)
-    }
-})
+    },
 
+    storage: multer.diskStorage({
+        destination: 'temp',
+        filename: function (req, file, cb) {
+            cb(null, file.originalname + '-' + Date.now())
+        }
+    })
+})
 
 router.post('/songs', auth, upload.single('song'), async (req, res) => {
 
     try {
-        const temp = await Image.findOne()
+        let imageBuffer;
+        if(req.file.mimetype === 'audio/mp3') {
+            const temp = await Image.findOne({})
+            let tags = await NodeID3.read(req.file.path)
+            imageBuffer = tags.image ? await sharp(tags.image.imageBuffer).png().toBuffer() : temp.buffer
+            tags = {
+                title: req.body.title + '| Benedictionz.com',
+                artist: req.body.artistName,
+                image: {
+                    imageBuffer: temp.buffer
+                }
+            }
+            await NodeID3.update(tags, req.file.path)
+        }
 
-        let tags = NodeID3.read(req.file.buffer)
-        const imageBuffer = tags.image ? await sharp(tags.image.imageBuffer).png().toBuffer() : temp.buffer
-
-
-        const writer = new ID3Writer(req.file.buffer);
-        writer.setFrame('TIT2', `${req.body.title} | benectionz.com`)
-            .setFrame('TPE1', [`${req.body.artistName}`, `${req.body.featured}`])
-            .setFrame('APIC', {
-                type: 3,
-                data: temp.buffer,
-                description: 'Benedictionz'
-            });
-        writer.addTag();
-
-        const taggedSongBuffer = Buffer.from(writer.arrayBuffer);
-
-
-        const song = new Song({...req.body, songBuffer: taggedSongBuffer, imageBuffer, artist: req.user._id})
+        const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "auto", use_filename: true})
+        //await unlinkAsync(req.file.path)
+        const song = new Song({...req.body, songUrl: result.secure_url, cloudinaryId: result.public_id, imageBuffer, artist: req.user._id})
 
         song.approved = false
         song.promoted = false
-
-
-        await song.save()
         const seoTitle = `${(song.title + ' by ' + song.artistName).replace(/ /g, '-')}`
 
         song.seoTitle = seoTitle
         await song.save()
+        req.user.songsCount +=1;
+        await req.user.save()
         res.status(201).send(song)
     } catch (error) {
-        console.log(error.message)
+        console.log(error)
         res.status(500).send(error.message)
     }
 
 })
+
 
 router.post('/songs/rate/:id', auth, async (req, res) => {
     try {
@@ -126,6 +142,7 @@ router.get('/songs/:id', async (req, res) => {
     }
 })
 
+/*
 
 router.get('/songs/:id/:download', async (req, res) => {
     try {
@@ -152,10 +169,11 @@ router.get('/songs/:id/:download', async (req, res) => {
         res.status(500).send(error.message)
     }
 })
+*/
 
 router.get('/search/:searchTerm/', async (req, res) => {
     try {
-        const songs = await Song.fuzzySearch({query: req.params.searchTerm, prefixOnly: true})
+        const songs = await Song.fuzzySearch({query: req.params.searchTerm, prefixOnly: true}, {approved: true})
 
 
         if (req.query['just-search']) {
@@ -187,10 +205,11 @@ router.get('/images/:id', async (req, res) => {
 
 router.get('/songs', async (req, res) => {
 
+
     const searchCriteria = {}
     const sort = {}
 
-    const queryOptions = ['artist', 'genre', 'rating']
+    const queryOptions = ['artist', 'audio', 'promoted', 'approved', 'genre', 'rating']
 
 
     if (req.query.sortBy) {
@@ -215,12 +234,28 @@ router.get('/songs', async (req, res) => {
             return res.status(401).send()
         }
 
-        res.send(songs)
+
+    const songsCount = await Song.countDocuments()
+
+        res.send({songs, songsCount})
     } catch (error) {
         res.status(500).send()
     }
 })
-//for some reason /songs/* doesn't work
+
+router.get('/featuredSongs', async (req, res) => {
+
+    try {
+        const featuredSongs = await Song.find({promoted: true, approved: true}).setOptions({
+            limit: 10
+        })
+        res.send(featuredSongs)
+    }catch(error) {
+        console.log(error.message)
+        res.status(500).send()
+    }
+})
+
 router.get('/mysongs', auth, async (req, res) => {
 
 
@@ -264,6 +299,9 @@ router.get('/mysongs', auth, async (req, res) => {
 
 router.patch('/songs/:id/upgrade', auth, async (req, res) => {
     try {
+        if(!req.user.admin) {
+            return res.status
+        }
         const song = await Song.findById(req.params.id)
         if(!song) {
             return res.status(404).send()
@@ -281,6 +319,21 @@ router.patch('/songs/:id/upgrade', auth, async (req, res) => {
     }
 })
 
+router.patch('/songs/:id/downloads', async (req, res) => {
+    try {
+        const song = await Song.findById(req.params.id)
+
+        if(!song) {
+            return res.status(401).send()
+        }
+
+        song.hits +=1;
+        await song.save()
+        res.send()
+    }catch(error) {
+        res.status(500).send()
+    }
+})
 
 
 router.patch('/songs/:id', auth, async (req, res) => {
@@ -330,6 +383,16 @@ router.delete('/songs/:id', auth, async (req, res) => {
         if (!song) {
             return res.status(401).send()
         }
+
+        const user = await User.findById(song.artist)
+        if(user) {
+            if(user.songsCount >0) {
+                user.songsCount -= 1
+                await user.save()
+            }
+        }
+
+        await cloudinary.uploader.destroy(song.cloudinaryId, {resource_type: 'video'});
         await song.delete()
 
         res.send()

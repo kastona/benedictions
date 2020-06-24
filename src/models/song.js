@@ -30,12 +30,15 @@ const songSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    songBuffer: {
-        type: Buffer
+
+    songUrl: {
+        type: String,
+        required: true
     },
     imageBuffer: {
         type: Buffer
     },
+
     artist: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -72,6 +75,10 @@ const songSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    cloudinaryId: {
+        type: String,
+        required: true
+    },
     track: {
         type: Number
     },
@@ -94,11 +101,11 @@ const songSchema = new mongoose.Schema({
 songSchema.methods.toJSON = function () {
     const song = this
     const songObject = song.toObject()
-    delete songObject.songBuffer
     delete songObject.imageBuffer
 
     return songObject
 }
+
 
 songSchema.plugin(mongooseFuzzySearching, { fields: ['title','genre', 'artistName', 'featured', 'lyrics'] })
 

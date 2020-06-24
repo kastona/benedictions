@@ -24,25 +24,45 @@ const upload = multer({
 
 router.post('/images', auth, upload.single('avatar'), async (req,res) => {
 
-    const buffer = await sharp(req.file.buffer).png().toBuffer()
-    const image = new Image({buffer, dummy: true})
-    image.buffer = buffer
-    await image.save()
+    try {
 
-    res.send()
+        if(!req.user.admin) {
+            return res.status(401).send()
+        }
+
+        const imageBuffer = await Image.findOne()
+        if(!imageBuffer) {
+
+            return res.status(404).send()
+        }
+
+
+        const buffer = await sharp(req.file.buffer).png().toBuffer()
+        imageBuffer.buffer = buffer
+        await imageBuffer.save()
+        res.send()
+    }catch(error) {
+        res.status(500).send()
+    }
+
 })
 
 router.get('/cover', async (req, res) => {
 
-    const imageBuffer = await Image.findOne()
-    if(!imageBuffer) {
+    try {
+        const imageBuffer = await Image.findOne()
+        if(!imageBuffer) {
 
-        return res.status(404).send()
+            return res.status(404).send()
+        }
+
+
+        res.set('Content-Type', 'image/png')
+        res.status(200).send(imageBuffer.buffer)
+    }catch(error) {
+        res.status(500).send()
     }
 
-
-    res.set('Content-Type', 'image/png')
-    res.status(200).send(imageBuffer.buffer)
 
 })
 
