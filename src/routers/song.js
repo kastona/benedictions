@@ -63,7 +63,7 @@ router.post('/songs', auth, upload.single('song'), async (req, res) => {
         }
 
         const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "auto", use_filename: true})
-        //await unlinkAsync(req.file.path)
+        await unlinkAsync(req.file.path)
         const song = new Song({...req.body, songUrl: result.secure_url, cloudinaryId: result.public_id, imageBuffer, artist: req.user._id})
 
         song.approved = false
