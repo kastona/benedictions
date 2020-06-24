@@ -30,11 +30,13 @@ router.post('/images', auth, upload.single('avatar'), async (req,res) => {
             return res.status(401).send()
         }
 
-        let imageBuffer = await Image.findOne()
+        /*let imageBuffer = await Image.findOne()
         if(!imageBuffer) {
 
             imageBuffer = new Image()
-        }
+        }*/
+
+        let imageBuffer = new Image()
 
 
         const buffer = await sharp(req.file.buffer).png().toBuffer()
