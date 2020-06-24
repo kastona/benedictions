@@ -30,10 +30,10 @@ router.post('/images', auth, upload.single('avatar'), async (req,res) => {
             return res.status(401).send()
         }
 
-        const imageBuffer = await Image.findOne()
+        let imageBuffer = await Image.findOne()
         if(!imageBuffer) {
 
-            return res.status(404).send()
+            imageBuffer = new Image()
         }
 
 
