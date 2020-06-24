@@ -246,7 +246,7 @@ router.get('/songs', async (req, res) => {
 router.get('/featuredSongs', async (req, res) => {
 
     try {
-        const featuredSongs = await Song.find({promoted: true, approved: true}).setOptions({
+        const featuredSongs = await Song.find({approved: true}).setOptions({
             limit: 10
         })
         res.send(featuredSongs)
