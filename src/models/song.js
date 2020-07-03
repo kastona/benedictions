@@ -26,19 +26,20 @@ const songSchema = new mongoose.Schema({
         type: Number,
         default:0
     },
-    genre: {
-        type: String,
-        trim: true
-    },
 
+    artUrl: {
+      type: String,
+      required: true
+    },
     songUrl: {
         type: String,
         required: true
     },
-    imageBuffer: {
-        type: Buffer
-    },
 
+    artId: {
+        type: String,
+        required: true
+    },
     artist: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -92,6 +93,9 @@ const songSchema = new mongoose.Schema({
         required: true,
         default: false
     },
+    genre: {
+      type: String
+    },
     promoted: {
         type: Boolean,
         default: false
@@ -107,7 +111,7 @@ songSchema.methods.toJSON = function () {
 }
 
 
-songSchema.plugin(mongooseFuzzySearching, { fields: ['title','genre', 'artistName', 'featured', 'lyrics'] })
+songSchema.plugin(mongooseFuzzySearching, { fields: ['title', 'artistName', 'featured', 'lyrics'] })
 
 
 

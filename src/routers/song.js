@@ -6,7 +6,6 @@ const cloudinary = require('cloudinary').v2
 const fs = require('fs')
 const { promisify } = require('util')
 const unlinkAsync = promisify(fs.unlink)
-const ID3Writer = require('browser-id3-writer');
 const auth = require('../middleware/auth')
 const Song = require('../models/song')
 const User = require('../models/user')
@@ -44,27 +43,37 @@ const upload = multer({
     })
 })
 
-router.post('/songs', auth, upload.single('song'), async (req, res) => {
+
+router.post('/songs', auth, upload.array('songs', 2), async (req, res) => {
 
     try {
-        let imageBuffer;
-        if(req.file.mimetype === 'audio/mp3') {
+
+        let art, songFile;
+
+        for(const file of req.files) {
+            if(file.mimetype === 'audio/mp3' || file.mimetype === 'video/mp4') {
+                songFile = file
+            }else {
+                art = file
+            }
+        }
+        if(songFile.mimetype === 'audio/mp3') {
             const temp = await Image.findOne({dummy: false})
-            let tags = await NodeID3.read(req.file.path)
-            imageBuffer = tags.image ? await sharp(tags.image.imageBuffer).png().toBuffer() : temp.buffer
-            tags = {
+            let tags = {
                 title: req.body.title + '| Benedictionz.com',
                 artist: req.body.artistName,
                 image: {
                     imageBuffer: temp.buffer
                 }
             }
-            await NodeID3.update(tags, req.file.path)
+            await NodeID3.update(tags, songFile.path)
         }
 
-        const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "auto", use_filename: true})
-        await unlinkAsync(req.file.path)
-        const song = new Song({...req.body, songUrl: result.secure_url, cloudinaryId: result.public_id, imageBuffer, artist: req.user._id})
+        const result = await cloudinary.uploader.upload(songFile.path, { resource_type: "auto", use_filename: true})
+        const artResult = await cloudinary.uploader.upload(art.path, { resource_type: "auto", use_filename: true})
+        await unlinkAsync(songFile.path)
+        await unlinkAsync(art.path)
+        const song = new Song({...req.body, artId: artResult.public_id, artUrl: artResult.secure_url, songUrl: result.secure_url, cloudinaryId: result.public_id, artist: req.user._id})
 
         song.approved = false
         song.promoted = false
@@ -75,6 +84,8 @@ router.post('/songs', auth, upload.single('song'), async (req, res) => {
         req.user.songsCount +=1;
         await req.user.save()
         res.status(201).send(song)
+
+        res.send()
     } catch (error) {
         console.log(error)
         res.status(500).send(error.message)
@@ -393,6 +404,7 @@ router.delete('/songs/:id', auth, async (req, res) => {
         }
 
         await cloudinary.uploader.destroy(song.cloudinaryId, {resource_type: 'video'});
+        await cloudinary.uploader.destroy(song.artId, {resource_type: 'image'});
         await song.delete()
 
         res.send()
