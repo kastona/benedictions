@@ -46,6 +46,7 @@ const upload = multer({
 
 router.post('/songs', auth, upload.array('songs', 2), async (req, res) => {
 
+    console.log(req.files)
     try {
 
         let art, songFile;
