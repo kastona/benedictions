@@ -21,12 +21,20 @@ router.post('/details', auth, async (req, res) => {
 })
 
 router.get('/details', async (req, res) => {
-    try{
+
+    const details = new Bene()
+
+    await details.save()
+
+    res.send('good!')
+
+    /*try{
         const details = await Bene.findOne({})
         res.send(details)
     }catch(error) {
+        console.log(error.message)
         res.status(500).send()
-    }
+    }*/
 })
 
 router.patch('/details', auth, async (req, res) => {
@@ -36,10 +44,6 @@ router.patch('/details', auth, async (req, res) => {
             return res.status(401).send()
         }
         const details = await Bene.findOne({})
-
-        details.title = req.body.title;
-        details.welcome = req.body.welcome;
-        details.contactMessage = req.body.contactMessage
 
 
         await details.save()

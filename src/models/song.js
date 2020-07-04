@@ -94,7 +94,8 @@ const songSchema = new mongoose.Schema({
         default: false
     },
     genre: {
-      type: String
+      type: String,
+        default: 'Not Specified'
     },
     promoted: {
         type: Boolean,
