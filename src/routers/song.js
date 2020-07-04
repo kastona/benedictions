@@ -55,6 +55,7 @@ router.post('/songs', auth, upload.array('songs', 2), async (req, res) => {
                 songFile = file
             }else {
                 art = file
+
             }
         }
         if(songFile.mimetype === 'audio/mp3') {
