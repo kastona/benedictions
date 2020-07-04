@@ -25,10 +25,10 @@ cloudinary.config({
 
 const upload = multer({
     limits: {
-        fileSize: 15428000000
+        fileSize: 6000000
     },
     fileFilter(req, file, cb) {
-        if (!file.originalname.match(/\.(mp3|mp4|jpg|jpeg)/)) {
+        if (!file.originalname.match(/\.(mp3|mp4)/)) {
             cb(new Error('Please Upload a valid file'))
         }
 
@@ -44,22 +44,13 @@ const upload = multer({
 })
 
 
-router.post('/songs', auth, upload.array('songs', 2), async (req, res) => {
+router.post('/songs', auth, upload.single('songs'), async (req, res) => {
 
-    console.log(req.files)
+
     try {
 
-        let art, songFile;
 
-        for(const file of req.files) {
-            if(file.mimetype === 'audio/mp3' || file.mimetype === 'video/mp4') {
-                songFile = file
-            }else {
-                art = file
-
-            }
-        }
-        if(songFile.mimetype === 'audio/mp3') {
+        if(req.file.mimetype === 'audio/mp3') {
             const temp = await Image.findOne({dummy: false})
             let tags = {
                 title: req.body.title + '| Benedictionz.com',
@@ -68,14 +59,14 @@ router.post('/songs', auth, upload.array('songs', 2), async (req, res) => {
                     imageBuffer: temp.buffer
                 }
             }
-            await NodeID3.update(tags, songFile.path)
+            await NodeID3.update(tags, req.file.path)
         }
 
-        const result = await cloudinary.uploader.upload(songFile.path, { resource_type: "auto", use_filename: true})
-        const artResult = await cloudinary.uploader.upload(art.path, { resource_type: "auto", use_filename: true})
-        await unlinkAsync(songFile.path)
-        await unlinkAsync(art.path)
-        const song = new Song({...req.body, artId: artResult.public_id, artUrl: artResult.secure_url, songUrl: result.secure_url, cloudinaryId: result.public_id, artist: req.user._id})
+        const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "auto", use_filename: true})
+        //const artResult = await cloudinary.uploader.upload(art.path, { resource_type: "auto", use_filename: true})
+        await unlinkAsync(req.file.path)
+        //await unlinkAsync(art.path)
+        const song = new Song({...req.body, artId: '', artUrl: '', songUrl: result.secure_url, cloudinaryId: result.public_id, artist: req.user._id})
 
         song.approved = false
         song.promoted = false
