@@ -28,8 +28,7 @@ const songSchema = new mongoose.Schema({
     },
 
     artUrl: {
-      type: String,
-      required: true
+      type: String
     },
     songUrl: {
         type: String,
@@ -37,8 +36,7 @@ const songSchema = new mongoose.Schema({
     },
 
     artId: {
-        type: String,
-        required: true
+        type: String
     },
     artist: {
         type: mongoose.Schema.Types.ObjectId,
