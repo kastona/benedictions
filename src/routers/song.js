@@ -49,15 +49,9 @@ router.post('/songs', auth, upload.array('songs',2), async (req, res) => {
     console.log(req.files)
     try {
 
-        let artFile, songFile;
+        let artFile = req.files[1], songFile = req.files[0];
 
-        for(const file of req.files) {
-            if(file.mimetype === 'image/jpeg') {
-                artFile = file
-            }else {
-                songFile = file
-            }
-        }
+
         if(songFile.mimetype === 'audio/mp3') {
             const temp = await Image.findOne({dummy: false})
             let tags = {
