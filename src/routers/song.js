@@ -28,7 +28,7 @@ const upload = multer({
         fileSize: 6000000
     },
     fileFilter(req, file, cb) {
-        if (!file.originalname.match(/\.(mp3|mp4)/)) {
+        if (!file.originalname.match(/\.(mp3|mp4|jpeg|jpg|png)/)) {
             cb(new Error('Please Upload a valid file'))
         }
 
@@ -44,13 +44,21 @@ const upload = multer({
 })
 
 
-router.post('/songs', auth, upload.single('songs'), async (req, res) => {
+router.post('/songs', auth, upload.array('songs',2), async (req, res) => {
 
 
     try {
 
+        let artFile, songFile;
 
-        if(req.file.mimetype === 'audio/mp3') {
+        for(const file of req.files) {
+            if(file.mimetype === 'image/jpeg') {
+                artFile = file
+            }else {
+                songFile = file
+            }
+        }
+        if(songFile.mimetype === 'audio/mp3') {
             const temp = await Image.findOne({dummy: false})
             let tags = {
                 title: req.body.title + '| Benedictionz.com',
@@ -59,14 +67,14 @@ router.post('/songs', auth, upload.single('songs'), async (req, res) => {
                     imageBuffer: temp.buffer
                 }
             }
-            await NodeID3.update(tags, req.file.path)
+            await NodeID3.update(tags, songFile.path)
         }
 
-        const result = await cloudinary.uploader.upload(req.file.path, { resource_type: "auto", use_filename: true})
-        //const artResult = await cloudinary.uploader.upload(art.path, { resource_type: "auto", use_filename: true})
-        await unlinkAsync(req.file.path)
-        //await unlinkAsync(art.path)
-        const song = new Song({...req.body, artId: '', artUrl: '', songUrl: result.secure_url, cloudinaryId: result.public_id, artist: req.user._id})
+        const result = await cloudinary.uploader.upload(songFile.path, { resource_type: "auto", use_filename: true})
+        const artResult = await cloudinary.uploader.upload(artFile.path, { resource_type: "auto", use_filename: true})
+        await unlinkAsync(songFile.path)
+        await unlinkAsync(artFile.path)
+        const song = new Song({...req.body, artId: artResult.public_id, artUrl: artResult.secure_url, songUrl: result.secure_url, cloudinaryId: result.public_id, artist: req.user._id})
 
         song.approved = false
         song.promoted = false
@@ -114,6 +122,7 @@ router.post('/songs/rate/:id', auth, async (req, res) => {
         res.status(500).send()
     }
 })
+
 
 router.get('/songs/can-rate/:id', auth, async (req, res) => {
     const songId = req.params.id
