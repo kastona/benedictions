@@ -1,12 +1,18 @@
 const express = require('express')
 const multer = require('multer')
 const sharp = require('sharp')
+const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const Song = require('../models/song')
 const Image = require('../models/image')
 const auth = require('../middleware/auth')
+const emailService = require('../util/email')
+
 
 const router = express.Router()
+
+
+
 
 const upload = multer({
     limits: {
@@ -23,30 +29,79 @@ const upload = multer({
 
 
 router.post('/users', async (req, res) => {
-    const user = new User(req.body)
-
-
     try {
+
+
+        const email = req.body.email
+        const temp = await User.findOne({email})
+
+        if(temp) {
+            return res.status(401).send(`The email ${email} is already associated with another account.`)
+        }
+
+        const stageName = req.body.stageName
+
+        const temp2 = await User.findOne({stageName})
+        if(temp2) {
+            return res.status(401).send(`The stage name is already taken`)
+        }
+
+
+
+        const user = new User(req.body)
+
+
         user.promoted = false
         await user.save()
-        const token = await user.generateAuthToken()
-        res.status(201).send({user, token})
+
+        await emailService.send(user, `We\`re excited to have you get started. First, you need to confirm your account. Just press the button below.`);
+
+
+
+
+        res.status(201).send({user})
     } catch (error) {
         console.log(error.message)
-        res.status(401).send(error)
+        res.status(401).send(error.message)
     }
 })
 
 router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
-        const token = await user.generateAuthToken()
+        const token = await user.generateAuthToken(true)
         await user.save()
         res.send({token})
 
     } catch (error) {
         console.log(error.message)
-        res.status(400).send(error)
+        res.status(400).send(error.message)
+    }
+})
+
+router.post('/users/confirm-email/:token', async (req, res) => {
+    try {
+        const token = req.params.token
+        const decoded = await jwt.verify(token, process.env.JSON_WEB_TOKEN_SECRET)
+        const user = await User.findOne({_id: decoded._id, confirmationToken: token})
+
+        if(!user) {
+            return res.status(401).send()
+        }
+
+        this.user.isVerified = true;
+        res.send(user)
+    }catch(error) {
+        res.status(500).send()
+    }
+})
+
+router.post('/users/resend-confirmation', auth, async (req, res) => {
+    try {
+        await emailService.send(req.user, 'As requested, here is your confirmation link. Click on the button below to confirm')
+        res.send()
+    }catch(error) {
+        res.status(500).send()
     }
 })
 

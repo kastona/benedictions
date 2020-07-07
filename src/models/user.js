@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema({
     genre: {
         type: String
     },
+    isVerified: { type: Boolean, default: false },
+    confirmToken: {
+      type: String
+    },
     label: {
         type: String
     },
@@ -100,20 +104,25 @@ userSchema.statics.findByCredentials = async (email, password) => {
     const user = await User.findOne({email})
     if(!user) {
 
-        throw new Error('Unable to login')
+        throw new Error(`The email ${email} is not associated with any account.`)
     }
     const passwordCorrect = await bcrypt.compare(password, user.password)
 
     if(!passwordCorrect) {
-        throw new Error('Unable to login')
+        throw new Error('Invalid Email of Password')
     }
+
     return user;
 }
 
-userSchema.methods.generateAuthToken = async function() {
+userSchema.methods.generateAuthToken = async function(login) {
     const user = this
     const token = jwt.sign({_id: user._id}, process.env.JSON_WEB_TOKEN_SECRET)
-    user.tokens = user.tokens.concat({token})
+
+        user.tokens = user.tokens.concat({token})
+    if(!login) {
+        user.confirmationToken = token
+    }
     return token
 }
 
