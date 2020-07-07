@@ -37,6 +37,7 @@ const songSchema = new mongoose.Schema({
 
     artId: {
         type: String
+
     },
     artist: {
         type: mongoose.Schema.Types.ObjectId,
