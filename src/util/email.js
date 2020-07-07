@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer')
 const { google } = require("googleapis");
+const notp = require('notp');
 const OAuth2 = google.auth.OAuth2;
 module.exports.send = async (user, emailMessage) => {
 
@@ -8,9 +9,7 @@ module.exports.send = async (user, emailMessage) => {
         process.env.OAUTH_CLIENT_SECRET,
         "https://developers.google.com/oauthplayground"
     );
-
-
-    const token = await user.generateAuthToken(false)
+    const token = notp.totp.gen(process.env.OAUTH_CLIENT_ID + user.stageName)
 
     oauth2Client.setCredentials({
         refresh_token: process.env.OAUTH_REFRESH_TOKEN
@@ -178,7 +177,7 @@ module.exports.send = async (user, emailMessage) => {
             `                                    <td bgcolor="#ffffff" align="center" style="padding: 20px 30px 60px 30px;">\n` +
             `                                        <table border="0" cellspacing="0" cellpadding="0">\n` +
             `                                            <tr>\n` +
-            `                                                <td align="center" style="border-radius: 3px;" bgcolor="#02c0d3"><a href="benedictionz.com/confirm-account/${token}" target="_blank" style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 15px 25px; border-radius: 2px; border: 1px solid #FFA73B; display: inline-block;">Confirm Account</a></td>\n` +
+            `                                                <td align="center" style="border-radius: 3px;"><p style="font-size: 40px; font-family: Helvetica, Arial, sans-serif; color: #02c0d3; text-decoration: none; color: #02c0d3; text-decoration: none; padding: 15px 25px; border-radius: 2px; display: inline-block;">${token}</p></td>\n` +
             `                                            </tr>\n` +
             `                                        </table>\n` +
             `                                    </td>\n` +
@@ -186,16 +185,6 @@ module.exports.send = async (user, emailMessage) => {
             `                            </table>\n` +
             `                        </td>\n` +
             `                    </tr> <!-- COPY -->\n` +
-            `                    <tr>\n` +
-            `                        <td bgcolor="#ffffff" align="left" style="padding: 0px 30px 0px 30px; color: #666666; font-family: \`Lato\`, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 25px;">\n` +
-            `                            <p style="margin: 0;">If that doesn\`t work, copy and paste the following link in your browser:  benedictionz.com/confirm-account/${token}</p>\n` +
-            `                        </td>\n` +
-            `                    </tr> <!-- COPY -->\n` +
-            `                    <tr>\n` +
-            `                        <td bgcolor="#ffffff" align="left" style="padding: 20px 30px 20px 30px; color: #666666; font-family: \`Lato\`, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 25px;">\n` +
-            `                            <p style="margin: 0;"><a href="#" target="_blank" style="color: #FFA73B;"></a></p>\n` +
-            `                        </td>\n` +
-            `                    </tr>\n` +
             `                    <tr>\n` +
             `                        <td bgcolor="#ffffff" align="left" style="padding: 0px 30px 20px 30px; color: #666666; font-family: \`Lato\`, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 25px;">\n` +
             `                            <p style="margin: 0;">If you have any questions, just reply to this email—we\`re always happy to help out.</p>\n` +

@@ -1,7 +1,7 @@
 const express = require('express')
 const multer = require('multer')
 const sharp = require('sharp')
-const jwt = require('jsonwebtoken')
+const notp = require('notp');
 const User = require('../models/user')
 const Song = require('../models/song')
 const Image = require('../models/image')
@@ -54,9 +54,8 @@ router.post('/users', async (req, res) => {
         user.promoted = false
         await user.save()
 
-        await emailService.send(user, `We\`re excited to have you get started. First, you need to confirm your account. Just press the button below.`);
-
-
+        await emailService.send(user, `We\`re excited to have you get started. First, you need to confirm your account. Below is your One Time Password.`);
+        await user.save()
 
 
         res.status(201).send({user})
@@ -79,29 +78,30 @@ router.post('/users/login', async (req, res) => {
     }
 })
 
-router.post('/users/confirm-email/:token', async (req, res) => {
+router.post('/users/confirm-email/:token',auth, async (req, res) => {
     try {
-        const token = req.params.token
-        const decoded = await jwt.verify(token, process.env.JSON_WEB_TOKEN_SECRET)
-        const user = await User.findOne({_id: decoded._id, confirmationToken: token})
+        const login = await notp.totp.verify(req.params.token, process.env.OAUTH_CLIENT_ID + req.user.stageName);
 
-        console.log(user)
-        if(!user) {
+        if(!login) {
             return res.status(401).send()
         }
 
-        this.user.isVerified = true;
-        res.send(user)
+        req.user.isVerified = true
+        await req.user.save()
+
+        res.send()
     }catch(error) {
+        console.log(error.message)
         res.status(500).send()
     }
 })
 
 router.post('/users/resend-confirmation', auth, async (req, res) => {
     try {
-        await emailService.send(req.user, 'As requested, here is your confirmation link. Click on the button below to confirm')
+        await emailService.send(req.user, 'As requested, here is your confirmation code.')
         res.send()
     }catch(error) {
+        console.log(error.message)
         res.status(500).send()
     }
 })

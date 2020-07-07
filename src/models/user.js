@@ -120,8 +120,8 @@ userSchema.methods.generateAuthToken = async function(login) {
     const token = jwt.sign({_id: user._id}, process.env.JSON_WEB_TOKEN_SECRET)
 
         user.tokens = user.tokens.concat({token})
-    if(!login) {
-        user.confirmationToken = token
+    if(login ===false) {
+        user.confirmToken = token
     }
     return token
 }
