@@ -85,6 +85,7 @@ router.post('/users/confirm-email/:token', async (req, res) => {
         const decoded = await jwt.verify(token, process.env.JSON_WEB_TOKEN_SECRET)
         const user = await User.findOne({_id: decoded._id, confirmationToken: token})
 
+        console.log(user)
         if(!user) {
             return res.status(401).send()
         }
@@ -125,9 +126,9 @@ router.get('/users/me', auth, async (req, res) => {
 
 router.patch('/users/:id/upgrade', auth, async (req, res) => {
     try {
-        /*if(!req.user.admin) {
+        if(!req.user.admin) {
             return res.status(400).send()
-        }*/
+        }
 
         const user = await User.findById(req.params.id)
 
