@@ -25,7 +25,7 @@ cloudinary.config({
 
 const upload = multer({
     limits: {
-        fileSize: 6000000
+        fileSize: 80000000
     },
     fileFilter(req, file, cb) {
         if (!file.originalname.match(/\.(mp3|mp4|jpeg|jpg|png)/)) {
