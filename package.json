@@ -31,7 +31,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "music-metadata": "^6.4.0",
     "node-id3": "^0.1.13",
-    "nodemailer": "^6.4.10",
+    "nodemailer": "^6.4.16",
     "notp": "^2.0.3",
     "sharp": "^0.24.1",
     "validator": "^12.2.0"
