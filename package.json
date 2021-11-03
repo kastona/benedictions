@@ -34,7 +34,7 @@
     "nodemailer": "^6.4.10",
     "notp": "^2.0.3",
     "sharp": "^0.24.1",
-    "validator": "^12.2.0"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"
