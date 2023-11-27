@@ -79,7 +79,6 @@ router.post('/songs', auth, upload.array('songs',2), async (req, res) => {
         await req.user.save()
         res.status(201).send(song)
 
-        res.send()
     } catch (error) {
         console.log(error)
         res.status(500).send(error.message)
